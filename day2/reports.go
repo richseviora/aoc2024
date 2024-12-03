@@ -18,6 +18,40 @@ func GenerateReports(readings []int) Reports {
 	return Reports{reports, changes}
 }
 
-func (r Reports) allValid() {
+func (r Reports) IsSafe() bool {
+	delta := r.allIncreasing() || r.allDecreasing()
+	if !delta {
+		return false
+	}
+	return r.allWithinLimit()
+}
 
+func (r Reports) allIncreasing() bool {
+	for _, change := range r.changes {
+		if change < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (r Reports) allDecreasing() bool {
+	for _, change := range r.changes {
+		if change > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func (r Reports) allWithinLimit() bool {
+	for _, change := range r.changes {
+		if change == 0 {
+			return false
+		}
+		if change > 3 || change < -3 {
+			return false
+		}
+	}
+	return true
 }
