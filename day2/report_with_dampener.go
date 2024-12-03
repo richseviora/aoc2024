@@ -33,6 +33,7 @@ func (r ReportWithDampener) IsSafe() bool {
 	}
 
 	increaseErrorsToEval = unique(increaseErrorsToEval)
+
 	decreaseErrorsToEval = unique(decreaseErrorsToEval)
 
 	return len(increaseErrorsToEval) <= 1 || len(decreaseErrorsToEval) <= 1

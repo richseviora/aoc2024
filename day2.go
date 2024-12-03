@@ -34,7 +34,7 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		report := day2.GenerateReportsFromStr(line)
+		report := day2.GenerateReportsFromStr(line, false)
 		if report.IsSafe() {
 			safeReports++
 		}
