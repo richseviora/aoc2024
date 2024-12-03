@@ -35,6 +35,9 @@ func TestIsSafe(t *testing.T) {
 		{name: "Safe - All Ascending by 1", reports: []int{1, 2, 3, 4, 5}, expected: true},
 		{name: "Unsafe - example 1", reports: []int{1, 2, 7, 8, 9}, expected: false},
 		{name: "Unsafe - example 2", reports: []int{9, 7, 6, 2, 1}, expected: false},
+		{name: "Unsafe - example 3", reports: []int{1, 3, 2, 4, 5}, expected: false},
+		{name: "Unsafe - example 4", reports: []int{8, 6, 4, 4, 1}, expected: false},
+		{name: "Safe - example 2", reports: []int{1, 3, 6, 7, 9}, expected: true},
 	}
 	for _, test := range testCases {
 		t.Run(fmt.Sprintf("Test Reports %v", test.name), func(t *testing.T) {
