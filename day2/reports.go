@@ -10,7 +10,21 @@ type Report struct {
 	changes  []int
 }
 
-func GenerateReportsFromStr(input string) Report {
+func (r Report) Readings() []int {
+	return r.readings
+}
+
+func (r Report) Changes() []int {
+	return r.changes
+}
+
+type Reportable interface {
+	IsSafe() bool
+	Readings() []int
+	Changes() []int
+}
+
+func GenerateReportsFromStr(input string, enableDampener bool) Reportable {
 	inputsSlice := strings.Fields(input) // Split input string into slice of strings
 	inputs := make([]int, len(inputsSlice))
 	for i, val := range inputsSlice {
@@ -21,10 +35,11 @@ func GenerateReportsFromStr(input string) Report {
 		}
 		inputs[i] = intVal
 	}
-	return GenerateReports(inputs)
+
+	return GenerateReports(inputs, enableDampener)
 }
 
-func GenerateReports(inputs []int) Report {
+func GenerateReports(inputs []int, enableDampener bool) Reportable {
 	readings := make([]int, len(inputs))
 	changes := make([]int, len(inputs)-1)
 
@@ -33,6 +48,12 @@ func GenerateReports(inputs []int) Report {
 	}
 	for i := 0; i < len(inputs)-1; i++ {
 		changes[i] = inputs[i+1] - inputs[i]
+	}
+	if enableDampener {
+		return ReportWithDampener{
+			readings: readings,
+			changes:  changes,
+		}
 	}
 	return Report{readings, changes}
 }
