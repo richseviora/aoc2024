@@ -17,7 +17,7 @@ func TestGenerateReports(t *testing.T) {
 		{reports: []int{1, 2, 3, 2, 1}, expectedChanges: []int{1, 1, -1, -1}},
 	}
 	for _, test := range testCases {
-		t.Run(fmt.Sprintf("Test Reports %v", test.reports), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Test Report %v", test.reports), func(t *testing.T) {
 			report := GenerateReports(test.reports)
 			if !reflect.DeepEqual(report.changes, test.expectedChanges) {
 				t.Errorf("expected Changes %v, got %v", test.expectedChanges, report.changes)
@@ -40,7 +40,7 @@ func TestIsSafe(t *testing.T) {
 		{name: "Safe - example 2", reports: []int{1, 3, 6, 7, 9}, expected: true},
 	}
 	for _, test := range testCases {
-		t.Run(fmt.Sprintf("Test Reports %v", test.name), func(t *testing.T) {
+		t.Run(fmt.Sprintf("Test Report %v", test.name), func(t *testing.T) {
 			report := GenerateReports(test.reports)
 			if !reflect.DeepEqual(report.IsSafe(), test.expected) {
 				t.Errorf("expected Changes %v, got %v", test.expected, report.IsSafe())

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"aoc2024/m/v2/day2"
 	"bufio"
 	"fmt"
 	"os"
@@ -27,14 +28,19 @@ func main() {
 	}
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
-	if scanner.Scan() {
-		line := scanner.Text()
+	safeReports := 0
 
-		fields := strings.Fields(line)
-		fmt.Println("Split line:", fields)
-		fmt.Println("Read line:", line)
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		report := day2.GenerateReportsFromStr(line)
+		if report.IsSafe() {
+			safeReports++
+		}
 	}
+
+	fmt.Println("Total Count of Safe Reports:", safeReports, "")
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error reading file:", err)
