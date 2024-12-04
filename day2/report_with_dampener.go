@@ -1,12 +1,14 @@
 package day2
 
+import "slices"
+
 type ReportWithDampener struct {
 	readings []int
 	changes  []int
 }
 
 func (r ReportWithDampener) Readings() []int {
-	return r.readings
+	return append([]int(nil), r.readings...)
 }
 
 func (r ReportWithDampener) Changes() []int {
@@ -14,6 +16,25 @@ func (r ReportWithDampener) Changes() []int {
 }
 
 func (r ReportWithDampener) IsSafe() bool {
+	errors := r.errors()
+	if len(errors.goingUp) == 0 || len(errors.goingDown) == 0 {
+		return true
+	}
+	for i := range r.readings {
+		reportCandidate := slices.Delete(r.Readings(), i, i+1)
+		droppedReport := GenerateReports(reportCandidate, false)
+		if droppedReport.IsSafe() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r ReportWithDampener) errors() struct {
+	goingUp   []int
+	goingDown []int
+} {
 	increaseErrors := r.allIncreasing()
 	decreaseErrors := r.allDecreasing()
 	limitErrors := r.allWithinLimit()
@@ -35,8 +56,10 @@ func (r ReportWithDampener) IsSafe() bool {
 	increaseErrorsToEval = unique(increaseErrorsToEval)
 
 	decreaseErrorsToEval = unique(decreaseErrorsToEval)
-
-	return len(increaseErrorsToEval) <= 1 || len(decreaseErrorsToEval) <= 1
+	return struct {
+		goingUp   []int
+		goingDown []int
+	}{goingUp: increaseErrorsToEval, goingDown: decreaseErrorsToEval}
 }
 
 func (r ReportWithDampener) allIncreasing() []int {

@@ -43,7 +43,7 @@ func TestIsSafeWithDampener(t *testing.T) {
 		t.Run(fmt.Sprintf("Test Report %v", test.name), func(t *testing.T) {
 			report := GenerateReports(test.reports, true)
 			if !reflect.DeepEqual(report.IsSafe(), test.expected) {
-				t.Errorf("expected Changes %v, got %v", test.expected, report.IsSafe())
+				t.Errorf("expected isSafe %v, got %v", test.expected, report.IsSafe())
 			}
 		})
 	}

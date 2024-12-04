@@ -7,11 +7,13 @@ import (
 	"os"
 )
 
+const fileName2 = "day2/input.txt"
+
 func main() {
 	// read file, process values,
 	fmt.Println("Day 2 - with Dampener")
 
-	file, err := os.Open(fileName)
+	file, err := os.Open(fileName2)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
@@ -24,7 +26,7 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		report := day2.GenerateReportsFromStr(line)
+		report := day2.GenerateReportsFromStr(line, true)
 		if report.IsSafe() {
 			safeReports++
 		}
