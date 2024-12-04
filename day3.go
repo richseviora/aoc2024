@@ -27,5 +27,5 @@ func readInput(fname string) string {
 func main() {
 	fmt.Println("Day 3 Begin")
 	result := readInput(day3Name)
-	day3.ParseString(result)
+	day3.ParseStringV2(result)
 }
