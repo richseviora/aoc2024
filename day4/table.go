@@ -35,3 +35,24 @@ func (t Table) IsInRange(row int, column int) bool {
 	}
 	return true
 }
+
+type ReturnType struct {
+	Cell      *Cell
+	Direction Direction
+}
+
+func (t Table) IterateOverTable(teststring string) []ReturnType {
+	returns := make([]ReturnType, 0)
+	directions := []Direction{Up, Down, Left, Right, UpLeft, UpRight, DownLeft, DownRight}
+	for ri, row := range t.rows {
+		for ci, _ := range row {
+			cell := t.GetCellAt(ri, ci)
+			for _, direction := range directions {
+				if cell.GetCellValuesInDirection(direction, len(teststring)) == teststring {
+					returns = append(returns, ReturnType{Cell: cell, Direction: direction})
+				}
+			}
+		}
+	}
+	return returns
+}

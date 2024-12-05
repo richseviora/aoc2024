@@ -1,5 +1,7 @@
 package main
 
+import "strings"
+
 type Direction int64
 
 const (
@@ -53,4 +55,13 @@ func (c Cell) GetCellsInDirection(d Direction, n int) []*Cell {
 		cells = append(cells, currentCell)
 	}
 	return cells
+}
+
+func (c Cell) GetCellValuesInDirection(d Direction, n int) string {
+	cells := c.GetCellsInDirection(d, n)
+	values := []string{}
+	for _, cell := range cells {
+		values = append(values, cell.Value)
+	}
+	return strings.Join(values, "")
 }
