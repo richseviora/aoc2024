@@ -23,6 +23,9 @@ func NewTable(input string) Table {
 }
 
 func (t Table) GetCellAt(row int, column int) *Cell {
+	if !t.IsInRange(row, column) {
+		return nil
+	}
 	return &t.rows[row][column]
 }
 

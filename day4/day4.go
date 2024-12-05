@@ -24,5 +24,9 @@ func ReadInput(fname string) string {
 }
 
 func main() {
-
+	input := ReadInput(day4Name)
+	table := NewTable(input)
+	results := table.IterateOverTable("XMAS")
+	fmt.Println(results)
+	fmt.Println(len(results))
 }
