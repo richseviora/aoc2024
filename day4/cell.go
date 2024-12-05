@@ -23,21 +23,21 @@ type Cell struct {
 func (c Cell) GetCellInDirection(d Direction) *Cell {
 	switch d {
 	case Up:
-		return c.Table.GetCellAt(c.Row+1, c.Column)
-	case Down:
 		return c.Table.GetCellAt(c.Row-1, c.Column)
-	case Left:
-		return c.Table.GetCellAt(c.Row, c.Column-1)
-	case Right:
-		return c.Table.GetCellAt(c.Row, c.Column+1)
-	case DownRight:
-		return c.Table.GetCellAt(c.Row+1, c.Column+1)
-	case DownLeft:
-		return c.Table.GetCellAt(c.Row+1, c.Column-1)
 	case UpLeft:
 		return c.Table.GetCellAt(c.Row-1, c.Column-1)
 	case UpRight:
 		return c.Table.GetCellAt(c.Row-1, c.Column+1)
+	case Down:
+		return c.Table.GetCellAt(c.Row+1, c.Column)
+	case DownRight:
+		return c.Table.GetCellAt(c.Row+1, c.Column+1)
+	case DownLeft:
+		return c.Table.GetCellAt(c.Row+1, c.Column-1)
+	case Left:
+		return c.Table.GetCellAt(c.Row, c.Column-1)
+	case Right:
+		return c.Table.GetCellAt(c.Row, c.Column+1)
 	}
 	panic("Invalid Direction")
 }
@@ -45,7 +45,7 @@ func (c Cell) GetCellInDirection(d Direction) *Cell {
 func (c Cell) GetCellsInDirection(d Direction, n int) []*Cell {
 	cells := []*Cell{&c}
 	currentCell := &c
-	for i := 0; i < n-1; i++ {
+	for i := 1; i < n; i++ {
 		currentCell = currentCell.GetCellInDirection(d)
 		if currentCell == nil {
 			break

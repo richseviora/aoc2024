@@ -18,7 +18,6 @@ func TestCell_GetCellsInDirection(t *testing.T) {
 		{"safe 0,0", 1, 1, Down, 2, []*Cell{
 			table.GetCellAt(1, 1),
 			table.GetCellAt(2, 1),
-			table.GetCellAt(3, 1),
 		}},
 	}
 	for _, tc := range testCases {
