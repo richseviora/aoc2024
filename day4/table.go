@@ -2,15 +2,6 @@ package main
 
 import "strings"
 
-type Direction int64
-
-const (
-	Up Direction = iota
-	Down
-	Left
-	Right
-)
-
 type Table struct {
 	rows [][]Cell
 }
@@ -43,25 +34,4 @@ func (t Table) IsInRange(row int, column int) bool {
 		return false
 	}
 	return true
-}
-
-type Cell struct {
-	Value  string
-	Table  *Table
-	Row    int
-	Column int
-}
-
-func (c Cell) GetCellInDirection(d Direction) *Cell {
-	switch d {
-	case Up:
-		return c.Table.GetCellAt(c.Row+1, c.Column)
-	case Down:
-		return c.Table.GetCellAt(c.Row-1, c.Column)
-	case Left:
-		return c.Table.GetCellAt(c.Row, c.Column-1)
-	case Right:
-		return c.Table.GetCellAt(c.Row, c.Column+1)
-	}
-	panic("Invalid Direction")
 }
