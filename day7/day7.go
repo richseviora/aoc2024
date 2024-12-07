@@ -37,6 +37,24 @@ func NewEquation(input string) Equation {
 	}
 }
 
+func (e *Equation) Evaluate(operators []Operator) int {
+	if len(operators) != len(e.Operands)-1 {
+		panic("operators must be one shorter than operands")
+	}
+	total := e.Operands[0]
+	for i, operator := range operators {
+		{
+			switch operator {
+			case Add:
+				total += e.Operands[i+1]
+			case Multiply:
+				total *= e.Operands[i+1]
+			}
+		}
+	}
+	return total
+}
+
 func ReadInput(fname string) string {
 	file, err := os.Open(fname)
 	defer file.Close()
