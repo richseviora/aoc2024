@@ -42,3 +42,28 @@ func TestEquation_Evaluate(t *testing.T) {
 		})
 	}
 }
+
+func TestEquation_Solve(t *testing.T) {
+	tests := []struct {
+		input     string
+		solvable  bool
+		operators []Operator
+	}{
+		{"190: 10 19", true, []Operator{Multiply}},
+		{"29: 10 19", true, []Operator{Add}},
+		{"39: 10 19", false, []Operator{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			equation := NewEquation(tt.input)
+			actual := equation.Solve()
+			if tt.solvable != actual {
+				t.Errorf("NewEquation(%v) = %v, want %v", tt.input, actual, tt.solvable)
+			}
+			//bothEmpty := len(tt.operators) == 0 && len(equation.Operators) == 0
+			if !reflect.DeepEqual(tt.operators, equation.Operators) {
+				t.Errorf("NewEquation(%v) = %v, want %v", tt.input, equation.Operators, tt.operators)
+			}
+		})
+	}
+}

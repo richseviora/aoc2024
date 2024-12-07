@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/mowshon/iterium"
 	"os"
 	"strconv"
 	"strings"
@@ -17,10 +18,10 @@ const (
 const fileName = "input.txt"
 
 type Equation struct {
-	Result   int
-	Operands []int
-	IsValid  *bool
-	Operator []Operator
+	Result    int
+	Operands  []int
+	IsValid   *bool
+	Operators []Operator
 }
 
 func NewEquation(input string) Equation {
@@ -53,6 +54,24 @@ func (e *Equation) Evaluate(operators []Operator) int {
 		}
 	}
 	return total
+}
+
+func (e *Equation) Solve() bool {
+	permutations, err := iterium.Permutations([]Operator{Add, Multiply}, len(e.Operands)-1).Slice()
+	if err != nil {
+		panic(err)
+	}
+	for _, permutation := range permutations {
+		if e.Evaluate(permutation) == e.Result {
+			valid := true
+			e.IsValid = &valid
+			e.Operators = permutation
+			return true
+		}
+	}
+	valid := false
+	e.IsValid = &valid
+	return false
 }
 
 func ReadInput(fname string) string {
