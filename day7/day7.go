@@ -13,6 +13,7 @@ type Operator int64
 const (
 	Add Operator = iota
 	Multiply
+	Append
 )
 
 const fileName = "input.txt"
@@ -20,7 +21,7 @@ const fileName = "input.txt"
 type Equation struct {
 	Result    int
 	Operands  []int
-	IsValid   *bool
+	IsValid   bool
 	Operators []Operator
 }
 
@@ -50,6 +51,8 @@ func (e *Equation) Evaluate(operators []Operator) int {
 				total += e.Operands[i+1]
 			case Multiply:
 				total *= e.Operands[i+1]
+			case Append:
+				total, _ = strconv.Atoi(fmt.Sprintf("%d%d", total, e.Operands[i+1]))
 			}
 		}
 	}
@@ -57,20 +60,20 @@ func (e *Equation) Evaluate(operators []Operator) int {
 }
 
 func (e *Equation) Solve() bool {
-	permutations, err := iterium.Permutations([]Operator{Add, Multiply}, len(e.Operands)-1).Slice()
+	operators := []Operator{Add, Multiply, Append}
+	generator := iterium.Product(operators, len(e.Operands)-1)
+	permutations, err := generator.Slice()
 	if err != nil {
 		panic(err)
 	}
 	for _, permutation := range permutations {
 		if e.Evaluate(permutation) == e.Result {
-			valid := true
-			e.IsValid = &valid
+			e.IsValid = true
 			e.Operators = permutation
 			return true
 		}
 	}
-	valid := false
-	e.IsValid = &valid
+	e.IsValid = false
 	return false
 }
 
@@ -91,5 +94,22 @@ func ReadInput(fname string) string {
 }
 
 func main() {
+	fileContent := ReadInput(fileName)
+	equations := make([]Equation, 0)
+	total := 0
+	for _, line := range strings.Split(fileContent, "\n") {
+		if line == "" {
+			continue
+		}
+		equations = append(equations, NewEquation(line))
+	}
+	for i, equation := range equations {
+		if equation.Solve() {
+			total += equation.Result
 
+		}
+		fmt.Printf("%d: %+v\n", i, equation)
+	}
+	fmt.Println(len(equations))
+	fmt.Println("Part 1 Total", total)
 }

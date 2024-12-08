@@ -50,7 +50,12 @@ func TestEquation_Solve(t *testing.T) {
 		operators []Operator
 	}{
 		{"190: 10 19", true, []Operator{Multiply}},
+		{"24: 1 2 3 4", true, []Operator{Add, Add, Multiply}},
+		{"80: 2 10 2 2", true, []Operator{Multiply, Multiply, Multiply}},
 		{"29: 10 19", true, []Operator{Add}},
+		{"156: 15 6", true, []Operator{Append}},
+		{"7290: 6 8 6 15", true, []Operator{Multiply, Append, Multiply}},
+		{"192: 17 8 14", true, []Operator{Append, Add}},
 		{"39: 10 19", false, []Operator{}},
 	}
 	for _, tt := range tests {
@@ -60,8 +65,8 @@ func TestEquation_Solve(t *testing.T) {
 			if tt.solvable != actual {
 				t.Errorf("NewEquation(%v) = %v, want %v", tt.input, actual, tt.solvable)
 			}
-			//bothEmpty := len(tt.operators) == 0 && len(equation.Operators) == 0
-			if !reflect.DeepEqual(tt.operators, equation.Operators) {
+			bothEmpty := len(tt.operators) == 0 && len(equation.Operators) == 0
+			if !reflect.DeepEqual(tt.operators, equation.Operators) && !bothEmpty {
 				t.Errorf("NewEquation(%v) = %v, want %v", tt.input, equation.Operators, tt.operators)
 			}
 		})
