@@ -1,7 +1,8 @@
-package day8
+package main
 
 import (
 	"fmt"
+	"github.com/mowshon/iterium"
 	"math"
 	"os"
 	"slices"
@@ -31,7 +32,7 @@ func NewTableFromString(input string) Grid {
 	rows := strings.Split(input, "\n")
 	for ri, row := range rows {
 		for ci, value := range strings.Split(row, "") {
-			if value != "." {
+			if value != "." && value != "#" {
 				if _, exists := frequencies[value]; !exists {
 					frequencies[value] = false
 				}
@@ -45,11 +46,53 @@ func NewTableFromString(input string) Grid {
 			}
 		}
 	}
-	return Grid{nodes, len(rows), len(rows[0]), make(map[string]bool)}
+	return Grid{nodes, len(rows), len(rows[0]), frequencies}
 }
 
 func (g *Grid) InBounds(c Coordinate) bool {
 	return c.Row >= 0 && c.Row < g.Height && c.Col >= 0 && c.Col < g.Width
+}
+
+func (g *Grid) GetAntennasForFrequency(value string) []Antenna {
+	antennas := make([]Antenna, 0)
+	for _, a := range g.Antennas {
+		if a.Frequency == value {
+			antennas = append(antennas, a)
+		}
+	}
+	return antennas
+}
+
+func (g *Grid) GetAntiNodesForFrequency(v string) []Coordinate {
+	coordinates := make([]Coordinate, 0)
+	antennas := g.GetAntennasForFrequency(v)
+	pairs, err := iterium.Combinations(antennas, 2).Slice()
+	if err != nil {
+		panic(err)
+	}
+	for _, pair := range pairs {
+		newCoordinates := CalculateAntiNodes(pair[0].Coordinate, pair[1].Coordinate, g)
+		coordinates = append(coordinates, newCoordinates...)
+	}
+	return coordinates
+}
+
+func (g *Grid) GetAntiNodesForAllFrequencies() []Coordinate {
+	coordinates := make([]Coordinate, 0)
+
+	for coord := range g.Frequencies {
+		coordinates = append(coordinates, g.GetAntiNodesForFrequency(coord)...)
+	}
+	seen := make(map[Coordinate]bool)
+	uniques := []Coordinate{}
+	for _, value := range coordinates {
+		if !seen[value] {
+			uniques = append(uniques, value)
+			seen[value] = true
+		}
+	}
+
+	return uniques
 }
 
 func CalculateAntiNodes(a, b Coordinate, g *Grid) []Coordinate {
@@ -83,16 +126,6 @@ func CalculateAntiNodes(a, b Coordinate, g *Grid) []Coordinate {
 	return validValues
 }
 
-func (g *Grid) GetAntennasForFrequency(value string) []Antenna {
-	antennas := make([]Antenna, 0)
-	for _, a := range g.Antennas {
-		if a.Frequency == value {
-			antennas = append(antennas, a)
-		}
-	}
-	return antennas
-}
-
 const filename = "input.txt"
 
 func ReadInput(fname string) string {
@@ -114,5 +147,6 @@ func ReadInput(fname string) string {
 func main() {
 	contents := ReadInput(filename)
 	table := NewTableFromString(contents)
-
+	uniqueCoords := table.GetAntiNodesForAllFrequencies()
+	fmt.Println(len(uniqueCoords))
 }
