@@ -63,9 +63,65 @@ func CompactBlocks(blocks []Block) ([]Block, bool) {
 	return append(initialSlice, blocks[firstEmptyBlock+1:lastFileBlock]...), true
 }
 
-func CompactUntilComplete(blocks []Block) []Block {
+func CompactBlocksWholeFiles(blocks []Block) ([]Block, bool) {
+	var lastFileBlockEnd int
+	var lastFileId int
+	for i := len(blocks) - 1; i >= 0; i-- {
+		if !blocks[i].IsEmpty() {
+			lastFileBlockEnd = i
+			lastFileId = blocks[i].Id
+			break
+		}
+	}
+	var lastFileBlockStart int
+	for i := lastFileBlockEnd - 1; i >= 0; i-- {
+		if blocks[i].IsEmpty() || blocks[i].Id != lastFileId {
+			lastFileBlockStart = i + 1
+			break
+		}
+	}
+	requiredLength := lastFileBlockEnd - lastFileBlockStart + 1
+	emptyBlockStart := -1
+	emptyBlockEnd := -1
+	emptyBlockFound := false
+	for i := 0; i < len(blocks); i++ {
+		block := blocks[i]
+		if block.IsEmpty() && emptyBlockStart < 0 {
+			emptyBlockStart = i
+			emptyBlockEnd = i
+		} else if block.IsEmpty() {
+			emptyBlockEnd = i
+		}
+		if emptyBlockStart >= 0 && emptyBlockEnd >= 0 && emptyBlockEnd-emptyBlockStart+1 >= requiredLength {
+			emptyBlockFound = true
+			break
+		}
+		if !block.IsEmpty() {
+			emptyBlockStart = -1
+			emptyBlockEnd = -1
+			emptyBlockFound = false
+		}
+	}
+	if !emptyBlockFound {
+		return blocks, false
+	}
+	fileBlock := blocks[lastFileBlockStart : lastFileBlockEnd+1]
+	initialSlice := append(blocks[:emptyBlockStart], fileBlock...)
+	if emptyBlockEnd+1 >= lastFileBlockStart {
+		return initialSlice, true
+	}
+	return append(initialSlice, blocks[emptyBlockEnd+1:lastFileBlockStart-1]...), true
+}
+
+func CompactUntilComplete(blocks []Block, wholeBlocks bool) []Block {
+	callFunc := func() ([]Block, bool) {
+		if wholeBlocks {
+			return CompactBlocksWholeFiles(blocks)
+		}
+		return CompactBlocks(blocks)
+	}
 	for {
-		compacted, ok := CompactBlocks(blocks)
+		compacted, ok := callFunc()
 		if !ok {
 			return compacted
 		}
@@ -101,10 +157,13 @@ func CalculateChecksum(b []Block) int64 {
 
 func HandleFile(fname string) {
 	fileContent := ReadInput(fname)
-	parsedContent := ParseFileMap(fileContent)
-	compactedBlocks := CompactUntilComplete(parsedContent)
-	checksum := CalculateChecksum(compactedBlocks)
-	fmt.Println(fname, checksum)
+	for _, pt2 := range []bool{false, true} {
+		parsedContent := ParseFileMap(fileContent)
+		compactedBlocks := CompactUntilComplete(parsedContent, pt2)
+		checksum := CalculateChecksum(compactedBlocks)
+		fmt.Println(fname, pt2, checksum)
+	}
+
 }
 
 func main() {

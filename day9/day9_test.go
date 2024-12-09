@@ -35,7 +35,29 @@ func Test_CompactBlocks(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result := CompactBlocks(tc.input)
+			result, _ := CompactBlocks(tc.input)
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("expected %v, got %v", tc.expected, result)
+			}
+		})
+	}
+}
+
+func Test_CompactFiles(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    []Block
+		expected []Block
+	}{
+		{"single non-empty block", []Block{Block{0}}, []Block{Block{0}}},
+		{"1.1", []Block{Block{0}, Block{-1}, Block{1}}, []Block{Block{0}, Block{1}}},
+		{"11111", ParseFileMap("11111"), []Block{Block{0}, Block{2}, Block{1}}},
+		{"133", ParseFileMap("133"), []Block{Block{0}, Block{1}, Block{1}, Block{1}}},
+		{"135", ParseFileMap("135"), []Block{Block{0}, Block{-1}, Block{-1}, Block{-1}, Block{1}, Block{1}, Block{1}, Block{1}, Block{1}}},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, _ := CompactBlocksWholeFiles(tc.input)
 			if !reflect.DeepEqual(result, tc.expected) {
 				t.Errorf("expected %v, got %v", tc.expected, result)
 			}
