@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 )
 
@@ -41,6 +42,37 @@ func CreateBlocks(id int, len int) []Block {
 	return blocks
 }
 
+func CompactBlocks(blocks []Block) ([]Block, bool) {
+	firstEmptyBlock := slices.IndexFunc(blocks, func(b Block) bool {
+		return b.IsEmpty()
+	})
+	if firstEmptyBlock < 0 {
+		return blocks, false
+	}
+	var lastFileBlock int
+	for i := len(blocks) - 1; i >= 0; i-- {
+		if !blocks[i].IsEmpty() {
+			lastFileBlock = i
+			break
+		}
+	}
+	if firstEmptyBlock >= lastFileBlock {
+		return blocks, false
+	}
+	initialSlice := append(blocks[:firstEmptyBlock], blocks[lastFileBlock])
+	return append(initialSlice, blocks[firstEmptyBlock+1:lastFileBlock]...), true
+}
+
+func CompactUntilComplete(blocks []Block) []Block {
+	for {
+		compacted, ok := CompactBlocks(blocks)
+		if !ok {
+			return compacted
+		}
+		blocks = compacted
+	}
+}
+
 func ParseFileMap(input string) []Block {
 	blocks := make([]Block, 0)
 	for i, digit := range input {
@@ -57,9 +89,22 @@ func ParseFileMap(input string) []Block {
 	return blocks
 }
 
+func CalculateChecksum(b []Block) int64 {
+	var total int64
+	for i, block := range b {
+		if !block.IsEmpty() {
+			total += int64(block.Id) * int64(i)
+		}
+	}
+	return total
+}
+
 func HandleFile(fname string) {
-	//fileContent := ReadInput(fname)
-	//parsedContent := ParseFileMap(fileContent)
+	fileContent := ReadInput(fname)
+	parsedContent := ParseFileMap(fileContent)
+	compactedBlocks := CompactUntilComplete(parsedContent)
+	checksum := CalculateChecksum(compactedBlocks)
+	fmt.Println(fname, checksum)
 }
 
 func main() {
