@@ -10,6 +10,8 @@ import (
 const testFileName = "test.txt"
 const actualFileName = "input.txt"
 
+var LengthExceedsBlockError = fmt.Errorf("source or destination start and length exceeds length")
+
 func ReadInput(fname string) string {
 	file, err := os.Open(fname)
 	defer file.Close()
@@ -63,19 +65,37 @@ func CompactBlocks(blocks []Block) ([]Block, bool) {
 	return append(initialSlice, blocks[firstEmptyBlock+1:lastFileBlock]...), true
 }
 
-func CompactBlocksWholeFiles(blocks []Block) ([]Block, bool) {
-	var lastFileBlockEnd int
-	var lastFileId int
+func SwapBlocks(blocks []Block, sourceStart, destStart, length int) ([]Block, error) {
+	if sourceStart < 0 || destStart < 0 {
+		return nil, fmt.Errorf("source or destination start less than 0")
+	}
+	if len(blocks) < (sourceStart+length) || len(blocks) < (destStart+length) {
+		return nil, LengthExceedsBlockError
+	}
+	sourceEntries := blocks[sourceStart : sourceStart+length]
+	destEntries := blocks[destStart : destStart+length]
+	newSlice := make([]Block, len(blocks))
+	copy(newSlice, blocks)
+	for i, block := range sourceEntries {
+		newSlice[i+destStart] = block
+	}
+	for i, block := range destEntries {
+		newSlice[i+sourceStart] = block
+	}
+	return newSlice, nil
+}
+
+func CompactBlocksWholeFileId(blocks []Block, fileId int) ([]Block, bool) {
+	lastFileBlockEnd := 0
 	for i := len(blocks) - 1; i >= 0; i-- {
-		if !blocks[i].IsEmpty() {
+		if blocks[i].Id == fileId {
 			lastFileBlockEnd = i
-			lastFileId = blocks[i].Id
 			break
 		}
 	}
 	var lastFileBlockStart int
 	for i := lastFileBlockEnd - 1; i >= 0; i-- {
-		if blocks[i].IsEmpty() || blocks[i].Id != lastFileId {
+		if blocks[i].IsEmpty() || blocks[i].Id != fileId {
 			lastFileBlockStart = i + 1
 			break
 		}
@@ -89,6 +109,10 @@ func CompactBlocksWholeFiles(blocks []Block) ([]Block, bool) {
 		if block.IsEmpty() && emptyBlockStart < 0 {
 			emptyBlockStart = i
 			emptyBlockEnd = i
+			if requiredLength == 1 {
+				emptyBlockFound = true
+				break
+			}
 		} else if block.IsEmpty() {
 			emptyBlockEnd = i
 		}
@@ -102,26 +126,42 @@ func CompactBlocksWholeFiles(blocks []Block) ([]Block, bool) {
 			emptyBlockFound = false
 		}
 	}
+	if emptyBlockStart >= lastFileBlockStart {
+		return blocks, false
+	}
 	if !emptyBlockFound {
 		return blocks, false
 	}
-	fileBlock := blocks[lastFileBlockStart : lastFileBlockEnd+1]
-	initialSlice := append(blocks[:emptyBlockStart], fileBlock...)
-	if emptyBlockEnd+1 >= lastFileBlockStart {
-		return initialSlice, true
+	swapBlocks, err := SwapBlocks(blocks, emptyBlockStart, lastFileBlockStart, requiredLength)
+	if err != nil {
+		panic(err)
 	}
-	return append(initialSlice, blocks[emptyBlockEnd+1:lastFileBlockStart-1]...), true
+	return swapBlocks, true
+}
+
+func CompactBlocksWholeFiles(blocks []Block) ([]Block, bool) {
+	var lastFileId int
+	for i := len(blocks) - 1; i >= 0; i-- {
+		if !blocks[i].IsEmpty() {
+			lastFileId = blocks[i].Id
+			break
+		}
+	}
+	for i := lastFileId; i >= 0; i-- {
+		blocks, _ = CompactBlocksWholeFileId(blocks, i)
+	}
+	return blocks, false
 }
 
 func CompactUntilComplete(blocks []Block, wholeBlocks bool) []Block {
-	callFunc := func() ([]Block, bool) {
+	callFunc := func(b []Block) ([]Block, bool) {
 		if wholeBlocks {
 			return CompactBlocksWholeFiles(blocks)
 		}
 		return CompactBlocks(blocks)
 	}
 	for {
-		compacted, ok := callFunc()
+		compacted, ok := callFunc(blocks)
 		if !ok {
 			return compacted
 		}
