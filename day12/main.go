@@ -38,6 +38,14 @@ type Region struct {
 	points []Coordinate
 }
 
+func (r *Region) Area() int {
+	return len(r.points)
+}
+
+func (r *Region) PerimeterLength() int {
+	return 0
+}
+
 func FindContiguousRegions(grid map[int]map[int]string) []Region {
 	visited := make(map[int]map[int]bool)
 	var regions []Region
@@ -86,6 +94,11 @@ func ProcessChallenge(input string) {
 	grid := ProcessInput(input)
 	regions := FindContiguousRegions(grid)
 	fmt.Println(len(regions))
+	total := 0
+	for _, r := range regions {
+		total += r.Area()
+	}
+	fmt.Println(total)
 }
 
 func ReadInput(fname string) string {
