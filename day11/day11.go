@@ -36,6 +36,7 @@ func ProcessInput(input string) []int {
 
 }
 
+var pt2Memo = make(map[int]map[int][]int)
 var memo = make(map[int][]int)
 
 func MemoizedCalculation(n int) []int {
@@ -56,19 +57,64 @@ func MemoizedCalculation(n int) []int {
 	return newStones
 }
 
+func MemoizedPt2Calculation(values []int, iterations int) []int {
+	fmt.Printf("CALLED %v %d\n", values, iterations)
+	var returnValue []int
+	defer func() { fmt.Printf("RETURNED  %v %d FOR %v\n", returnValue, iterations, values) }()
+	if iterations == 0 {
+		returnValue = values
+		return returnValue
+	}
+	if iterations == 1 {
+		newValues := make([]int, 0)
+		for _, v := range values {
+			newValues = append(newValues, Calculation(v)...)
+		}
+		returnValue = newValues
+		return returnValue
+	}
+	newValues := make([]int, 0)
+	for _, v := range values {
+		if pt2Memo[v] != nil && pt2Memo[v][iterations] != nil {
+			newValues = append(newValues, pt2Memo[v][iterations]...)
+			continue
+		}
+		if pt2Memo[v] == nil {
+			pt2Memo[v] = make(map[int][]int)
+			pt2Memo[v][0] = []int{v}
+		}
+		pt2Memo[v][iterations] = MemoizedPt2Calculation([]int{v}, iterations-1)
+		//for i := 1; i <= iterations; i++ {
+		//	if pt2Memo[v] == nil {
+		//		pt2Memo[v] = make(map[int][]int)
+		//		pt2Memo[v][0] = []int{v}
+		//	}
+		//	if pt2Memo[v][i] == nil {
+		//		previousValue, _ := pt2Memo[v][i-1]
+		//		pt2Memo[v][i] = MemoizedPt2Calculation(previousValue, 1)
+		//	}
+		//}
+		newValues = append(newValues, pt2Memo[v][iterations]...)
+	}
+	returnValue = newValues
+	return newValues
+}
+
 func Calculation(n int) []int {
 	if memo[n] != nil {
+		fmt.Println("RET Memoized", n)
 		return memo[n]
 	}
 	newStones := MemoizedCalculation(n)
 	memo[n] = newStones
+	fmt.Println("SET Memoized", n, newStones)
 	return newStones
 }
 
-func HandleBlink(stones []int) []int {
+func HandleBlink(stones []int, iterations int) []int {
 	newStones := make([]int, 0)
 	for _, s := range stones {
-		newStones = append(newStones, Calculation(s)...)
+		newStones = append(newStones, MemoizedPt2Calculation([]int{s}, iterations)...)
 	}
 	return newStones
 }
@@ -76,10 +122,8 @@ func HandleBlink(stones []int) []int {
 func ProcessChallenge(input string, iterations int) {
 	stones := ProcessInput(input)
 	fmt.Printf("Stones Before %d, Count: %d\n", iterations, len(stones))
-	for i := 0; i < iterations; i++ {
-		stones = HandleBlink(stones)
-		fmt.Printf("Stones On %d, Count: %d\n", i, len(stones))
-	}
+	stones = HandleBlink(stones, iterations)
+	fmt.Printf("Stones On %d, Count: %d\n", len(stones))
 	fmt.Printf("Stones After %d, Count: %d\n", iterations, len(stones))
 }
 
@@ -93,6 +137,6 @@ func HandleFile(fname string, iterations int) {
 }
 
 func main() {
-	HandleFile(testFileName, 6)
+	//HandleFile(testFileName, 6)
 	HandleFile(actualFileName, 75)
 }
