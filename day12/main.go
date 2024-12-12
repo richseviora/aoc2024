@@ -7,6 +7,7 @@ import (
 )
 
 var testFileName = "test.txt"
+var test2FileName = "test2.txt"
 var actualFileName = "input.txt"
 
 var grid = make(map[int]map[int]string)
@@ -35,14 +36,36 @@ type Coordinate struct {
 }
 
 type Region struct {
-	points []Coordinate
-	id     string
-	length int
-	sides  []Segment
+	points          []Coordinate
+	id              string
+	length          int
+	perimeterLength []Segment
+	segments        [][]Segment
 }
 
 type Segment struct {
 	interior, exterior Coordinate
+}
+
+func (s *Segment) Horizontal() bool {
+	return s.interior.x == s.exterior.x
+}
+
+func (s *Segment) Vertical() bool {
+	return !s.Horizontal()
+}
+
+func (s *Segment) IsContinuing(other *Segment) bool {
+	// if vertical, next segment msut be in same X/col, and up or down Y by 1
+	if s.Vertical() != other.Vertical() {
+		return false
+	}
+	if s.Vertical() && s.interior.x == other.interior.x {
+		return s.interior.y == other.interior.y-1 || s.interior.y == other.interior.y+1
+	} else if s.Horizontal() && s.interior.y == other.interior.y {
+		return s.interior.x == other.interior.x-1 || s.interior.x == other.interior.x+1
+	}
+	return false
 }
 
 func (r *Region) Area() int {
@@ -57,25 +80,49 @@ func (r *Region) PerimeterLength() int {
 	if r.length != 0 {
 		return r.length
 	}
-	sides := make([]Segment, 0)
+	perimeterSegments := make([]Segment, 0)
 	for _, point := range r.points {
 		for _, dir := range directions {
 			nr, nc := point.y+dir.dy, point.x+dir.dx
 			value := grid[point.y][point.x]
 			if grid[nr] == nil {
-				fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, "NO VALUE")
-				sides = append(sides, Segment{interior: point, exterior: Coordinate{x: nc, y: nr}})
+				//fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, "NO VALUE")
+				perimeterSegments = append(perimeterSegments, Segment{interior: point, exterior: Coordinate{x: nc, y: nr}})
 				continue
 			}
 			if (grid[nr] != nil) && grid[nr][nc] != value {
-				fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, grid[nr][nc])
-				sides = append(sides, Segment{interior: point, exterior: Coordinate{x: nc, y: nr}})
+				//fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, grid[nr][nc])
+				perimeterSegments = append(perimeterSegments, Segment{interior: point, exterior: Coordinate{x: nc, y: nr}})
 				continue
 			}
 		}
 	}
-	r.sides = sides
-	return len(sides)
+	r.length = len(perimeterSegments)
+	r.perimeterLength = perimeterSegments
+	return len(perimeterSegments)
+}
+
+func (r *Region) PerimeterSides() int {
+	if r.perimeterLength == nil {
+		r.PerimeterLength()
+	}
+	segments := make([][]Segment, 0)
+	visitedSegments := make(map[Segment]bool)
+	for _, s := range r.perimeterLength {
+		if visitedSegments[s] {
+			continue
+		}
+		segments = append(segments, make([]Segment, 0))
+		segments[len(segments)-1] = append(segments[len(segments)-1], s)
+		for _, other := range r.perimeterLength {
+			if s.IsContinuing(&other) {
+				segments[len(segments)-1] = append(segments[len(segments)-1], other)
+				visitedSegments[other] = true
+			}
+		}
+	}
+	r.segments = segments
+	return len(segments)
 }
 
 func FindContiguousRegions(grid map[int]map[int]string) []Region {
@@ -134,9 +181,11 @@ func ProcessChallenge(input string) {
 		price := r.Price()
 		perimeter := r.PerimeterLength()
 		totalPrice += price
-		fmt.Printf("Region: %+v, Area: %d Perimeter: %d Price: %d, Detail: %+v\n", r.id, area, perimeter, price, r)
+		sides := r.PerimeterSides()
+		fmt.Printf("Region: %+v, Area: %d Perimeter: %d Price: %d, Sides: %d Detail: %+v\n", r.id, area, perimeter, price, sides, r)
 	}
 	fmt.Println(total, totalPrice)
+	fmt.Println("------")
 }
 
 func ReadInput(fname string) string {
@@ -165,6 +214,7 @@ func HandleFile(fname string) {
 }
 
 func main() {
-	HandleFile(testFileName)
-	HandleFile(actualFileName)
+	//HandleFile(testFileName)
+	HandleFile(test2FileName)
+	//HandleFile(actualFileName)
 }
