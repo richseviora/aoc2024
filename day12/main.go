@@ -36,14 +36,39 @@ type Coordinate struct {
 
 type Region struct {
 	points []Coordinate
+	id     string
+	length int
 }
 
 func (r *Region) Area() int {
 	return len(r.points)
 }
 
+func (r *Region) Price() int {
+	return r.Area() * r.PerimeterLength()
+}
+
 func (r *Region) PerimeterLength() int {
-	return 0
+	if r.length != 0 {
+		return r.length
+	}
+	sides := 0
+	for _, point := range r.points {
+		for _, dir := range directions {
+			nr, nc := point.y+dir.dy, point.x+dir.dx
+			value := grid[point.y][point.x]
+			if grid[nr] == nil {
+				fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, "NO VALUE")
+				sides++
+			}
+			if (grid[nr] != nil) && grid[nr][nc] != value {
+				fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, grid[nr][nc])
+				sides++
+			}
+		}
+	}
+	r.length = sides
+	return sides
 }
 
 func FindContiguousRegions(grid map[int]map[int]string) []Region {
@@ -58,8 +83,8 @@ func FindContiguousRegions(grid map[int]map[int]string) []Region {
 
 			if !visited[ri][ci] {
 				// Perform BFS starting from this cell
-				region := Region{}
 				value := grid[ri][ci]
+				region := Region{id: value}
 				queue := [][]int{{ri, ci}}
 				visited[ri][ci] = true
 
@@ -67,11 +92,11 @@ func FindContiguousRegions(grid map[int]map[int]string) []Region {
 					point := queue[0]
 					queue = queue[1:]
 					r, c := point[0], point[1]
-					region.points = append(region.points, Coordinate{x: r, y: c})
+					region.points = append(region.points, Coordinate{x: c, y: r})
 
 					// Check all 4 possible directions
 					for _, dir := range directions {
-						nr, nc := r+dir.dx, c+dir.dy
+						nr, nc := r+dir.dy, c+dir.dx
 
 						if grid[nr] != nil && grid[nr][nc] != "" && !visited[nr][nc] && grid[nr][nc] == value {
 							if visited[nr] == nil {
@@ -95,10 +120,16 @@ func ProcessChallenge(input string) {
 	regions := FindContiguousRegions(grid)
 	fmt.Println(len(regions))
 	total := 0
+	totalPrice := 0
 	for _, r := range regions {
-		total += r.Area()
+		area := r.Area()
+		total += area
+		price := r.Price()
+		perimeter := r.PerimeterLength()
+		totalPrice += price
+		fmt.Printf("Region: %+v, Area: %d Perimeter: %d Price: %d, Detail: %+v\n", r.id, area, perimeter, price, r)
 	}
-	fmt.Println(total)
+	fmt.Println(total, totalPrice)
 }
 
 func ReadInput(fname string) string {
@@ -128,5 +159,5 @@ func HandleFile(fname string) {
 
 func main() {
 	HandleFile(testFileName)
-	HandleFile(actualFileName)
+	//HandleFile(actualFileName)
 }
