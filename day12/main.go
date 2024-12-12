@@ -38,6 +38,11 @@ type Region struct {
 	points []Coordinate
 	id     string
 	length int
+	sides  []Segment
+}
+
+type Segment struct {
+	interior, exterior Coordinate
 }
 
 func (r *Region) Area() int {
@@ -52,23 +57,25 @@ func (r *Region) PerimeterLength() int {
 	if r.length != 0 {
 		return r.length
 	}
-	sides := 0
+	sides := make([]Segment, 0)
 	for _, point := range r.points {
 		for _, dir := range directions {
 			nr, nc := point.y+dir.dy, point.x+dir.dx
 			value := grid[point.y][point.x]
 			if grid[nr] == nil {
 				fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, "NO VALUE")
-				sides++
+				sides = append(sides, Segment{interior: point, exterior: Coordinate{x: nc, y: nr}})
+				continue
 			}
 			if (grid[nr] != nil) && grid[nr][nc] != value {
 				fmt.Printf("For Point %+v, Side: %d %d value %s\n", point, nc, nr, grid[nr][nc])
-				sides++
+				sides = append(sides, Segment{interior: point, exterior: Coordinate{x: nc, y: nr}})
+				continue
 			}
 		}
 	}
-	r.length = sides
-	return sides
+	r.sides = sides
+	return len(sides)
 }
 
 func FindContiguousRegions(grid map[int]map[int]string) []Region {
@@ -159,5 +166,5 @@ func HandleFile(fname string) {
 
 func main() {
 	HandleFile(testFileName)
-	//HandleFile(actualFileName)
+	HandleFile(actualFileName)
 }
