@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -60,10 +61,12 @@ func (s *Segment) IsContinuing(other *Segment) bool {
 	if s.Vertical() != other.Vertical() {
 		return false
 	}
-	if s.Vertical() && s.interior.x == other.interior.x {
-		return s.interior.y == other.interior.y-1 || s.interior.y == other.interior.y+1
-	} else if s.Horizontal() && s.interior.y == other.interior.y {
-		return s.interior.x == other.interior.x-1 || s.interior.x == other.interior.x+1
+	if s.Vertical() && (s.interior.x == other.interior.x && s.exterior.x == other.exterior.x) {
+		return (s.exterior.y == other.exterior.y-1 && s.interior.y == other.interior.y-1) ||
+			(s.exterior.y == other.exterior.y+1 && s.interior.y == other.interior.y+1)
+	} else if s.Horizontal() && s.interior.y == other.interior.y && s.exterior.y == other.exterior.y {
+		return (s.interior.x == other.interior.x-1 && s.exterior.x == other.exterior.x-1) ||
+			(s.interior.x == other.interior.x+1 && s.exterior.x == other.exterior.x+1)
 	}
 	return false
 }
@@ -115,7 +118,7 @@ func (r *Region) PerimeterSides() int {
 		segments = append(segments, make([]Segment, 0))
 		segments[len(segments)-1] = append(segments[len(segments)-1], s)
 		for _, other := range r.perimeterLength {
-			if s.IsContinuing(&other) {
+			if slices.IndexFunc(segments[len(segments)-1], func(s Segment) bool { return s.IsContinuing(&other) }) != -1 {
 				segments[len(segments)-1] = append(segments[len(segments)-1], other)
 				visitedSegments[other] = true
 			}
@@ -175,6 +178,7 @@ func ProcessChallenge(input string) {
 	fmt.Println(len(regions))
 	total := 0
 	totalPrice := 0
+	totalPricePt2 := 0
 	for _, r := range regions {
 		area := r.Area()
 		total += area
@@ -182,9 +186,11 @@ func ProcessChallenge(input string) {
 		perimeter := r.PerimeterLength()
 		totalPrice += price
 		sides := r.PerimeterSides()
-		fmt.Printf("Region: %+v, Area: %d Perimeter: %d Price: %d, Sides: %d Detail: %+v\n", r.id, area, perimeter, price, sides, r)
+		pricePt2 := sides * area
+		totalPricePt2 += pricePt2
+		fmt.Printf("Region: %+v, Area: %d Perimeter: %d Price: %d PT2 %d, Sides: %d Detail: %+v\n", r.id, area, perimeter, price, pricePt2, sides, r)
 	}
-	fmt.Println(total, totalPrice)
+	fmt.Println(total, totalPrice, totalPricePt2)
 	fmt.Println("------")
 }
 
@@ -215,6 +221,6 @@ func HandleFile(fname string) {
 
 func main() {
 	//HandleFile(testFileName)
-	HandleFile(test2FileName)
-	//HandleFile(actualFileName)
+	//HandleFile(test2FileName)
+	HandleFile(actualFileName)
 }
