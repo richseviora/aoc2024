@@ -39,3 +39,18 @@ func ParseInput(input string) []Parameter {
 	}
 	return parameters
 }
+
+func (p *Parameter) Solutions() []Solution {
+	aMax := p.targetX/p.ax + 1
+	bMax := p.targetX/p.bx + 1
+
+	solutions := make([]Solution, 0)
+	for a := 0; a < aMax; a++ {
+		for b := 0; b < bMax; b++ {
+			if (p.ax*a+p.bx*b == p.targetX) && (p.ay*a+p.by*b == p.targetY) {
+				solutions = append(solutions, Solution{a, b})
+			}
+		}
+	}
+	return solutions
+}
