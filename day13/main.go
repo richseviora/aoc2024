@@ -9,7 +9,8 @@ var testFileName = "test.txt"
 var actualFileName = "input.txt"
 
 func ProcessChallenge(input string) {
-
+	parameters := ParseInput(input)
+	fmt.Println(parameters)
 }
 
 func ReadInput(fname string) string {
