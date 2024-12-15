@@ -83,6 +83,16 @@ func (g *Grid) HandleDirection(d Direction) bool {
 	return true
 }
 
+func (g *Grid) GetBoxGPSTotal() int {
+	total := 0
+	for coordinate, cell := range g.Coordinates {
+		if cell.IsOccupied() {
+			total += coordinate.CalculateGPS()
+		}
+	}
+	return total
+}
+
 type Cell struct {
 	Content string
 }
@@ -105,6 +115,10 @@ func (c Cell) IsRobot() bool {
 
 type Coordinate struct {
 	x, y int
+}
+
+func (c Coordinate) CalculateGPS() int {
+	return c.x + c.y*100
 }
 
 func (c Coordinate) GoDirection(direction Direction) *Coordinate {

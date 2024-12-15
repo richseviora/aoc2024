@@ -6,6 +6,7 @@ import (
 )
 
 var testFileName = "test.txt"
+var test2FileName = "test2.txt"
 var actualFileName = "input.txt"
 
 func ProcessChallenge(input string) {
@@ -15,6 +16,7 @@ func ProcessChallenge(input string) {
 		valid := grid.HandleDirection(direction)
 		fmt.Printf("Step: %d in direction %d VALID: %t \nGrid:\n%s\n", i, direction, valid, grid.ToString())
 	}
+	fmt.Println("Final Grid Value: ", grid.GetBoxGPSTotal())
 }
 
 func ReadInput(fname string) string {
@@ -43,7 +45,7 @@ func HandleFile(fname string) {
 }
 
 func main() {
-	HandleFile(testFileName)
+	//HandleFile(testFileName)
 	//HandleFile(test2FileName)
-	//HandleFile(actualFileName)
+	HandleFile(actualFileName)
 }
