@@ -9,8 +9,12 @@ import (
 var testFileName = "test.txt"
 var actualFileName = "input.txt"
 
-func ProcessChallenge(input string) {
-	parameters := ParseInput(input)
+func ProcessChallenge(input string, addDelta bool) {
+	delta := 0
+	if addDelta {
+		delta = 10000000000000
+	}
+	parameters := ParseInput(input, delta)
 	totalCost := 0
 	for _, parameter := range parameters {
 		solutions := parameter.Solutions()
@@ -46,9 +50,9 @@ func ReadInput(fname string) string {
 
 func HandleFile(fname string) {
 	fileContent := ReadInput(fname)
-	for _, pt2 := range []bool{false} {
+	for _, pt2 := range []bool{false, true} {
 		fmt.Println(fname, pt2, len(fileContent))
-		ProcessChallenge(fileContent)
+		ProcessChallenge(fileContent, pt2)
 	}
 }
 
