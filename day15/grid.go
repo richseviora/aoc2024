@@ -51,17 +51,18 @@ func (g *Grid) HandleDirection(d Direction) bool {
 	possibleMove := false
 	for nextCell != nil {
 		// check if valid move, empty
-		if g.GetCell(*nextCell).IsEmpty() {
+		cell := g.GetCell(*nextCell)
+		if cell.IsEmpty() {
 			possibleMove = true
 			nextCell = nil
 			continue
 		}
-		if g.GetCell(*nextCell).IsOccupied() {
+		if cell.IsOccupied() {
 			cellsToMove = append(cellsToMove, *nextCell)
 			nextCell = nextCell.GoDirection(d)
 			continue
 		}
-		if g.GetCell(*nextCell).IsWall() {
+		if cell.IsWall() {
 			possibleMove = false
 			nextCell = nil
 			continue
@@ -97,24 +98,47 @@ type Cell struct {
 	Content string
 }
 
-func (c Cell) IsWall() bool {
+func (c *Cell) IsWall() bool {
 	return c.Content == "#"
 }
 
-func (c Cell) IsEmpty() bool {
+func (c *Cell) IsEmpty() bool {
 	return c.Content == "."
 }
 
-func (c Cell) IsOccupied() bool {
+func (c *Cell) IsOccupied() bool {
+	return c.Content == "[" || c.Content == "]" || c.Content == "O"
+}
+
+func (c *Cell) IsOccupiedSingle() bool {
 	return c.Content == "O"
 }
 
-func (c Cell) IsRobot() bool {
+func (c *Cell) IsOccupiedLeft() bool {
+	return c.Content == "["
+}
+
+func (c *Cell) IsOccupiedRight() bool {
+	return c.Content == "]"
+}
+
+func (c *Cell) IsRobot() bool {
 	return c.Content == "@"
 }
 
 type Coordinate struct {
 	x, y int
+}
+
+func (c Coordinate) GetOccupiedLeft(g *Grid) Coordinate {
+	cell := g.GetCell(c)
+	if cell.IsOccupiedLeft() {
+		return c
+	}
+	if cell.IsOccupiedRight() {
+		return *c.GoDirection(Left)
+	}
+	panic("No occupied left for this cell")
 }
 
 func (c Coordinate) CalculateGPS() int {
