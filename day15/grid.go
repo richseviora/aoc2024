@@ -44,42 +44,88 @@ func (g *Grid) GetRobot() Coordinate {
 	panic("No robot found")
 }
 
+func DropFirstSlice(s []*Coordinate) []*Coordinate {
+	if len(s) == 0 {
+		return s
+	}
+	if len(s) == 1 {
+		return []*Coordinate{}
+	}
+	return s[1:]
+}
+
 func (g *Grid) HandleDirection(d Direction) bool {
 	robot := g.GetRobot()
-	nextCell := robot.GoDirection(d)
+	nextCoordinates := []*Coordinate{robot.GoDirection(d)}
 	cellsToMove := []Coordinate{robot}
-	possibleMove := false
-	for nextCell != nil {
+	possibleMove := true
+	visited := map[Coordinate]bool{}
+	for len(nextCoordinates) > 0 && nextCoordinates[0] != nil {
 		// check if valid move, empty
-		cell := g.GetCell(*nextCell)
+		nextCoordinate := nextCoordinates[0]
+		if visited[*nextCoordinate] {
+			nextCoordinates = DropFirstSlice(nextCoordinates)
+			continue
+		}
+		nextCoordinates = DropFirstSlice(nextCoordinates)
+		visited[*nextCoordinate] = true
+		cell := g.GetCell(*nextCoordinate)
 		if cell.IsEmpty() {
-			possibleMove = true
-			nextCell = nil
 			continue
 		}
 		if cell.IsOccupied() {
-			cellsToMove = append(cellsToMove, *nextCell)
-			nextCell = nextCell.GoDirection(d)
-			continue
+			if cell.IsOccupiedSingle() {
+				cellsToMove = append(cellsToMove, *nextCoordinate)
+				nextCoordinates = append(nextCoordinates, nextCoordinate.GoDirection(d))
+				continue
+			} else if cell.IsOccupiedLeft() {
+				occupiedRight := nextCoordinate.GetOccupiedRight(g)
+				visited[occupiedRight] = true
+				occupiedLeftNext := nextCoordinate.GoDirection(d)
+				occupiedRightNext := occupiedRight.GoDirection(d)
+				cellsToMove = append(cellsToMove, *nextCoordinate, occupiedRight)
+				nextCoordinates = append(nextCoordinates, occupiedLeftNext, occupiedRightNext)
+				continue
+			} else if cell.IsOccupiedRight() {
+				occupiedLeft := nextCoordinate.GetOccupiedLeft(g)
+				visited[occupiedLeft] = true
+				occupiedLeftNext := nextCoordinate.GoDirection(d)
+				occupiedRightNext := occupiedLeft.GoDirection(d)
+				cellsToMove = append(cellsToMove, *nextCoordinate, occupiedLeft)
+				nextCoordinates = append(nextCoordinates, occupiedLeftNext, occupiedRightNext)
+				continue
+			}
+
 		}
 		if cell.IsWall() {
 			possibleMove = false
-			nextCell = nil
+			nextCoordinates = make([]*Coordinate, 0)
 			continue
 		}
+
 	}
 	// move cells {
 	if !possibleMove {
 		return false
 	}
 	slices.Reverse(cellsToMove)
+	changes := make(map[Coordinate]Cell)
 	for _, cell := range cellsToMove {
 		destCell := cell.GoDirection(d)
 		if destCell == nil {
 			panic("unexpected nil")
 		}
-		g.Coordinates[*destCell] = g.Coordinates[cell]
-		g.Coordinates[cell] = Cell{Content: "."}
+		changes[*destCell] = g.Coordinates[cell]
+	}
+	for _, cell := range cellsToMove {
+		if _, ok := changes[cell]; !ok {
+			changes[cell] = Cell{Content: "."}
+		}
+
+	}
+	changes[robot] = Cell{Content: "."}
+	for coordinate, cell := range changes {
+		g.Coordinates[coordinate] = cell
 	}
 	return true
 }
@@ -87,7 +133,7 @@ func (g *Grid) HandleDirection(d Direction) bool {
 func (g *Grid) GetBoxGPSTotal() int {
 	total := 0
 	for coordinate, cell := range g.Coordinates {
-		if cell.IsOccupied() {
+		if cell.IsOccupiedSingle() || cell.IsOccupiedLeft() {
 			total += coordinate.CalculateGPS()
 		}
 	}
@@ -130,10 +176,10 @@ type Coordinate struct {
 	x, y int
 }
 
-func (c Coordinate) GetOccupiedLeft(g *Grid) Coordinate {
-	cell := g.GetCell(c)
+func (c *Coordinate) GetOccupiedLeft(g *Grid) Coordinate {
+	cell := g.GetCell(*c)
 	if cell.IsOccupiedLeft() {
-		return c
+		return *c
 	}
 	if cell.IsOccupiedRight() {
 		return *c.GoDirection(Left)
@@ -141,11 +187,22 @@ func (c Coordinate) GetOccupiedLeft(g *Grid) Coordinate {
 	panic("No occupied left for this cell")
 }
 
-func (c Coordinate) CalculateGPS() int {
+func (c *Coordinate) GetOccupiedRight(g *Grid) Coordinate {
+	cell := g.GetCell(*c)
+	if cell.IsOccupiedRight() {
+		return *c
+	}
+	if cell.IsOccupiedLeft() {
+		return *c.GoDirection(Right)
+	}
+	panic("No occupied right for this cell")
+}
+
+func (c *Coordinate) CalculateGPS() int {
 	return c.x + c.y*100
 }
 
-func (c Coordinate) GoDirection(direction Direction) *Coordinate {
+func (c *Coordinate) GoDirection(direction Direction) *Coordinate {
 	switch direction {
 	case Up:
 		return &Coordinate{x: c.x, y: c.y - 1}
@@ -182,7 +239,7 @@ func DirectionFromChar(c rune) Direction {
 	panic("Invalid Direction")
 }
 
-func NewGridFromInput(input string) (*Grid, []Direction) {
+func NewGridFromInput(input string, doubleWide bool) (*Grid, []Direction) {
 	inputs := strings.Split(input, "\n")
 	directions := make([]Direction, 0)
 	grid := &Grid{
@@ -196,7 +253,25 @@ func NewGridFromInput(input string) (*Grid, []Direction) {
 		}
 		for x, char := range line {
 			if readingGrid {
-				grid.AddCell(Coordinate{x, y}, string(char))
+				if doubleWide {
+					firstChar, secondChar := func(input string) (string, string) {
+						if input == "#" {
+							return "#", "#"
+						} else if input == "O" {
+							return "[", "]"
+						} else if input == "." {
+							return ".", "."
+						} else if input == "@" {
+							return "@", "."
+						}
+						panic("Invalid input")
+					}(string(char))
+					grid.AddCell(Coordinate{x * 2, y}, firstChar)
+					grid.AddCell(Coordinate{(x * 2) + 1, y}, secondChar)
+				} else {
+					grid.AddCell(Coordinate{x, y}, string(char))
+				}
+
 			} else {
 				directions = append(directions, DirectionFromChar(char))
 			}

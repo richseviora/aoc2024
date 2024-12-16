@@ -7,10 +7,11 @@ import (
 
 var testFileName = "test.txt"
 var test2FileName = "test2.txt"
+var test3FileName = "test3.txt"
 var actualFileName = "input.txt"
 
-func ProcessChallenge(input string) {
-	grid, directions := NewGridFromInput(input)
+func ProcessChallenge(input string, pt2 bool) {
+	grid, directions := NewGridFromInput(input, pt2)
 	fmt.Println("Grid:\n", grid.ToString())
 	for i, direction := range directions {
 		valid := grid.HandleDirection(direction)
@@ -38,14 +39,12 @@ func ReadInput(fname string) string {
 
 func HandleFile(fname string) {
 	fileContent := ReadInput(fname)
-	for _, pt2 := range []bool{false} {
+	for _, pt2 := range []bool{true} {
 		fmt.Println(fname, pt2, len(fileContent))
-		ProcessChallenge(fileContent)
+		ProcessChallenge(fileContent, pt2)
 	}
 }
 
 func main() {
-	//HandleFile(testFileName)
-	//HandleFile(test2FileName)
 	HandleFile(actualFileName)
 }
