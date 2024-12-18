@@ -5,11 +5,12 @@ import (
 	"os"
 )
 
-func ProcessChallenge(input string, limit int) int {
-	grid := NewGrid(71, 71)
+func ProcessChallenge(fname string, size, limit int) int {
+	input := ReadInput(fname)
+	grid := NewGrid(size, size)
 	grid.PopulateGridFromInput(input, limit)
 	grid.PrintGrid([]*Cell{})
-	return 0
+	return grid.GetCheapestPath(false)
 }
 
 func ReadInput(fname string) string {
@@ -29,19 +30,19 @@ func ReadInput(fname string) string {
 
 }
 
-func HandleFile(fname string, limit, expected int) {
-	fileContent := ReadInput(fname)
+func HandleFile(fname string, size, limit, expected int) {
+
 	for _, pt2 := range []bool{true} {
-		color.Yellow("Filename: %s, Part 2: %t, File Length: %d", fname, pt2, len(fileContent))
-		result := ProcessChallenge(fileContent, limit)
+		color.Yellow("Filename: %s, Part 2: %t", fname, pt2)
+		result := ProcessChallenge(fname, size, limit)
 		if result == expected {
-			color.Green("PASSED")
+			color.Green("PASSED - Expected: %d, Actual: %d", expected, result)
 		} else {
-			color.Red("FAILED")
+			color.Red("FAILED - Expected: %d, Actual: %d", expected, result)
 		}
 	}
 }
 
 func main() {
-	HandleFile("input.txt", 1024, 124)
+	HandleFile("input.txt", 1024, 124, 0)
 }

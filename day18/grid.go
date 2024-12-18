@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -12,6 +13,8 @@ type Grid struct {
 	cells         map[Coordinate]*Cell
 	height, width int
 }
+
+var enableDetail = os.Getenv("ENABLE_DETAIL") == "true"
 
 func NewGrid(height, width int) *Grid {
 	cells := make(map[Coordinate]*Cell)
@@ -44,7 +47,14 @@ func (g *Grid) PopulateGridFromInput(input string, limit int) {
 		x, _ := strconv.Atoi(coordinates[0])
 		y, _ := strconv.Atoi(coordinates[1])
 		coordinate := Coordinate{x: x, y: y}
+		if enableDetail {
+			fmt.Println("Placing Coordinate", coordinate)
+		}
 		g.SetCellContent(coordinate, "#")
+		if enableDetail {
+
+			g.PrintGrid([]*Cell{})
+		}
 	}
 }
 
@@ -173,22 +183,23 @@ func (g *Grid) GetPathsToEnd() [][]*Cell {
 }
 
 func CalculatePathCost(path []*Cell, output bool) int {
-	previousAction := Right
-	totalCost := 0
-	for i := 1; i < len(path); i++ {
-		thisAction, err := path[i-1].GetCellDirection(path[i])
-		if err != nil {
-			fmt.Println("Error", err, path[i-1], path[i])
-		}
-		cost := GetMovementCost(previousAction, thisAction)
-		totalCost += cost
-		if output {
-			fmt.Println("Cost", cost, "Total Cost", totalCost, previousAction, thisAction)
-		}
-		previousAction = thisAction
-
-	}
-	return totalCost
+	//previousAction := Right
+	//totalCost := 0
+	return len(path) - 1
+	//for i := 1; i < len(path); i++ {
+	//	thisAction, err := path[i-1].GetCellDirection(path[i])
+	//	if err != nil {
+	//		fmt.Println("Error", err, path[i-1], path[i])
+	//	}
+	//	cost := GetMovementCost(previousAction, thisAction)
+	//	totalCost += cost
+	//	if output {
+	//		fmt.Println("Cost", cost, "Total Cost", totalCost, previousAction, thisAction)
+	//	}
+	//	previousAction = thisAction
+	//
+	//}
+	//return totalCost
 }
 
 func (g *Grid) GetCheapestPath(output bool) int {
@@ -215,8 +226,9 @@ func (g *Grid) SetCellContent(c Coordinate, content string) {
 }
 
 func (g *Grid) PrintGrid(path []*Cell) {
-	for x := 0; x < g.width; x++ {
-		for y := 0; y < g.height; y++ {
+	fmt.Println("GRID >>>")
+	for y := 0; y < g.height; y++ {
+		for x := 0; x < g.width; x++ {
 			cell := g.cells[Coordinate{x, y}]
 			if slices.Index(path, cell) > -1 {
 				fmt.Print("X")
@@ -226,6 +238,7 @@ func (g *Grid) PrintGrid(path []*Cell) {
 		}
 		fmt.Println()
 	}
+	fmt.Println(">>> GRID")
 }
 
 func PathToString(path []*Cell) string {
@@ -237,8 +250,5 @@ func PathToString(path []*Cell) string {
 }
 
 func GetMovementCost(d1, d2 Direction) int {
-	if d1 == d2 {
-		return 1
-	}
-	return 1001
+	return 1
 }
