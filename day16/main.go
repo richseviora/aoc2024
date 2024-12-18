@@ -11,7 +11,8 @@ var test3FileName = "test3.txt"
 var actualFileName = "input.txt"
 
 func ProcessChallenge(input string, pt2 bool) int {
-	return 0
+	grid := NewGridFromInput(input)
+	return grid.GetCheapestPath(false)
 }
 
 func ReadInput(fname string) string {
@@ -45,5 +46,6 @@ func HandleFile(fname string, expected int) {
 }
 
 func main() {
-	HandleFile(testFileName, 7036)
+	//HandleFile(testFileName, 7036)
+	HandleFile(actualFileName, 11048)
 }
