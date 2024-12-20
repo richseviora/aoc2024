@@ -38,15 +38,11 @@ func NewGrid(height, width int) *Grid {
 }
 
 func (g *Grid) PopulateGridFromInput(input string, limit int) {
-	inputLines := strings.Split(input, "\n")
-	for i, line := range inputLines {
+	coordinates := GetCoordinatesFromInput(input)
+	for i, coordinate := range coordinates {
 		if i >= limit {
 			return
 		}
-		coordinates := strings.Split(line, ",")
-		x, _ := strconv.Atoi(coordinates[0])
-		y, _ := strconv.Atoi(coordinates[1])
-		coordinate := Coordinate{x: x, y: y}
 		if enableDetail {
 			fmt.Println("Placing Coordinate", coordinate)
 		}
@@ -56,6 +52,51 @@ func (g *Grid) PopulateGridFromInput(input string, limit int) {
 			g.PrintGrid([]*Cell{})
 		}
 	}
+}
+
+func GetCoordinatesFromInput(input string) []Coordinate {
+	inputLines := strings.Split(input, "\n")
+	result := []Coordinate{}
+	for _, line := range inputLines {
+		coordinates := strings.Split(line, ",")
+		x, _ := strconv.Atoi(coordinates[0])
+		y, _ := strconv.Atoi(coordinates[1])
+		coordinate := Coordinate{x: x, y: y}
+		result = append(result, coordinate)
+	}
+	return result
+}
+
+func FindFirstFailingInput(input string, size int) int {
+	coordinates := GetCoordinatesFromInput(input)
+
+	firstTrue := func(start, end int, predicate func(int) bool) int {
+		low, high := start, end
+		result := -1 // Default to -1 if no index satisfies the predicate
+		for low <= high {
+			fmt.Println("Evaluating", low, high)
+			mid := (low + high) / 2
+			if predicate(mid) {
+				result = mid   // Store the current mid as a potential answer
+				high = mid - 1 // Narrow the search to the lower half
+			} else {
+				low = mid + 1 // Narrow the search to the upper half
+			}
+		}
+
+		return result
+
+	}
+	result := firstTrue(0, len(coordinates), func(i int) bool {
+		grid := NewGrid(size, size)
+		grid.PopulateGridFromInput(input, i)
+		result := grid.GetPathDistanceToEnd()
+		if result <= 1 {
+			return true
+		}
+		return false
+	})
+	return result
 }
 
 type Coordinate struct {
@@ -182,6 +223,69 @@ func (g *Grid) GetPathsToEnd() [][]*Cell {
 	return paths
 }
 
+func (g *Grid) GetPathDistanceToEnd() int {
+	var paths [][]*Cell
+	startCell := g.FindStartCell()
+	endCell := g.cells[Coordinate{x: g.width - 1, y: g.height - 1}]
+	heap := NewHeapQueue[*Cell]()
+	heap.Push(startCell)
+	cellScores := map[Coordinate]int{
+		startCell.Coordinate: 0,
+	}
+	for {
+
+		cell, _ := heap.Pop().(*Cell)
+
+		if cell == nil {
+			break
+		}
+		cellScore, _ := cellScores[cell.Coordinate]
+		if enableDetail {
+			fmt.Printf("EVAL: %+v SCORE: %d\n", cell, cellScore)
+		}
+
+		if cell.IsEnd() {
+			paths = append(paths, []*Cell{cell})
+			continue
+		}
+		possibleMoves := cell.GetPossibleMoves()
+		for _, possibleMove := range possibleMoves {
+
+			scoreDelta := ScoreSuggestion(cell, possibleMove)
+			newScore := 1 + cellScore
+			priority := scoreDelta + newScore
+			if enableDetail {
+				fmt.Printf("TEST: %+v SCORE: %d\n", possibleMove, newScore)
+			}
+
+			if existingScore, ok := cellScores[possibleMove.Coordinate]; (ok && existingScore > newScore) || !ok {
+				cellScores[possibleMove.Coordinate] = newScore
+				heap.Upsert(possibleMove, priority)
+				if enableDetail {
+
+					fmt.Printf("QUEUE: %+v SCORE: %d HEAP SIZE: %d\n", possibleMove, newScore, heap.Len())
+				}
+			} else {
+				if enableDetail {
+
+					fmt.Printf("SKIP: %+v SCORE: %d\n", possibleMove, newScore)
+				}
+			}
+		}
+	}
+	//if enableDetail {
+	g.PrintCellWithScore(cellScores)
+	//}
+
+	result := cellScores[endCell.Coordinate]
+	fmt.Printf("RESULT: %d\n", result)
+	return result
+}
+
+func ScoreSuggestion(c1, c2 *Cell) int {
+	return (c2.x - c1.x) + (c2.y - c1.y)
+}
+
 func CalculatePathCost(path []*Cell, output bool) int {
 	//previousAction := Right
 	//totalCost := 0
@@ -225,13 +329,34 @@ func (g *Grid) SetCellContent(c Coordinate, content string) {
 	g.cells[c].Content = content
 }
 
+func (g *Grid) PrintCellWithScore(scores map[Coordinate]int) {
+	cells := make([]*Cell, 0)
+	for coord, cell := range scores {
+		itoa := strconv.Itoa(cell)
+
+		cell := Cell{
+			Coordinate: coord,
+			Content:    itoa[len(itoa)-1 : len(itoa)],
+			Grid:       g,
+		}
+		cells = append(cells, &cell)
+	}
+	g.PrintGrid(cells)
+}
+
 func (g *Grid) PrintGrid(path []*Cell) {
 	fmt.Println("GRID >>>")
 	for y := 0; y < g.height; y++ {
 		for x := 0; x < g.width; x++ {
 			cell := g.cells[Coordinate{x, y}]
-			if slices.Index(path, cell) > -1 {
-				fmt.Print("X")
+			index := slices.IndexFunc(path, func(test *Cell) bool {
+				return test.Coordinate == cell.Coordinate
+			})
+			if index > -1 {
+				testCell := path[index]
+				fmt.Print(testCell.Content)
+				//fmt.Print(testCell.Content)
+				continue
 			} else {
 				fmt.Print(cell.Content)
 			}

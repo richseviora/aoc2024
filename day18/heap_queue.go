@@ -38,12 +38,15 @@ func (h *HeapQueue[T]) Push(x interface{}) {
 }
 
 func (h *HeapQueue[T]) Pop() any {
-	last := len(*h.elements) - 1
-	element := (*h.elements)[last]
-	(*h.elements)[last] = (*h.elements)[0]
-	(*h.elements)[0] = element
-	delete(h.positions, element)
-	return element
+	old := *h.elements
+	n := len(old)
+	if n == 0 {
+		return nil
+	}
+	x := old[n-1]
+	*h.elements = old[0 : n-1]
+	delete(h.positions, x)
+	return x
 }
 
 func (h *HeapQueue[T]) Less(i, j int) bool {

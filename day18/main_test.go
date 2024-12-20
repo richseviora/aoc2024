@@ -10,7 +10,7 @@ func TestProcessChallenge(t *testing.T) {
 		expected int
 	}{
 		{"test1.txt", 7, 12, 22},
-		{"input.txt", 71, 1024, 0},
+		{"input.txt", 71, 2869, 0},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.fileName, func(t *testing.T) {
@@ -20,4 +20,13 @@ func TestProcessChallenge(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGrid_FindFirstFailingInput(t *testing.T) {
+	t.Run("find location", func(t *testing.T) {
+		result := ProcessChallengePart2("input.txt", 71, 12)
+		if result != 1024 {
+			t.Errorf("expected %v, got %v", 1024, result)
+		}
+	})
 }

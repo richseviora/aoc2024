@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"github.com/fatih/color"
 	"os"
+	"strings"
 )
 
 func ProcessChallenge(fname string, size, limit int) int {
@@ -10,7 +12,15 @@ func ProcessChallenge(fname string, size, limit int) int {
 	grid := NewGrid(size, size)
 	grid.PopulateGridFromInput(input, limit)
 	grid.PrintGrid([]*Cell{})
-	return grid.GetCheapestPath(false)
+	return grid.GetPathDistanceToEnd()
+}
+
+func ProcessChallengePart2(fname string, size, limit int) int {
+	input := ReadInput(fname)
+	result := FindFirstFailingInput(input, size)
+	inputLines := strings.Split(input, "\n")
+	fmt.Printf("Failing Input: %s\n", inputLines[result])
+	return result
 }
 
 func ReadInput(fname string) string {
