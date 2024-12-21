@@ -34,6 +34,16 @@ func TestCanBeComposedFrom(t *testing.T) {
 			},
 		},
 		{
+			"abba",
+			[]string{"a", "b", "ba", "ab"},
+			[][]string{
+				{"a", "b", "b", "a"},
+				{"a", "b", "ba"},
+				{"ab", "b", "a"},
+				{"ab", "ba"},
+			},
+		},
+		{
 			"aaa",
 			[]string{"a", "b", "c"},
 			[][]string{
@@ -57,7 +67,7 @@ func TestCanBeComposedFrom(t *testing.T) {
 			}
 			result := CanBeComposedFromMemoized(tc.input, sequences)
 			if !reflect.DeepEqual(result, outputCombinations) {
-				t.Errorf("expected %+v, got %+v", outputCombinations, result)
+				t.Errorf("EXPECTED: %+v\nGOT: %+v", outputCombinations, result)
 			}
 		})
 	}
