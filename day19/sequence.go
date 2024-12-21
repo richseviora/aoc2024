@@ -14,7 +14,11 @@ type Sequence struct {
 	UniqueCharacters string
 }
 
-type AnalysisResult = map[Request][][]Sequence
+func (s *Sequence) String() string {
+	return s.Content
+}
+
+type AnalysisResult = map[Request]int
 
 var cache = memoize.NewMemoizer(cache2.NoExpiration, cache2.NoExpiration)
 
@@ -56,48 +60,55 @@ func (s *Sequence) IsSubsetOf(other Sequence) bool {
 	return strings.Contains(other.Content, s.Content)
 }
 
-func CanBeComposedFrom(test string, validPermutations []Sequence) [][]Sequence {
+func CanBeComposedFrom(test string, validPermutations []Sequence) int {
 	// get unique characters
 	// candidates include some or all of the unique strings
 	// filter for valid lengths, they cannot exceed the test length.
 	fmt.Printf("CAN BE COMPOSED FROM %s %+v\n", test, validPermutations)
-	filteredSequences := make([]Sequence, 0)
+	filteredSequences := make(map[Sequence]bool)
 	for _, sequence := range validPermutations {
 		if sequence.IsSubsetOf(NewSequence(test)) {
-			filteredSequences = append(filteredSequences, sequence)
+			filteredSequences[sequence] = true
 		}
 	}
 	if len(filteredSequences) == 0 {
-		return nil
+		return 0
 	}
+	potentialPermutations := 0
 	potentialMatches := make([][]Sequence, 0)
-	for _, candidate := range filteredSequences {
+	for candidate, _ := range filteredSequences {
+		//fmt.Printf("TEST: %s CANDIDATE: %+v\n", test, candidate)
 		if test == candidate.Content {
+			potentialPermutations++
 			potentialMatches = append(potentialMatches, []Sequence{candidate})
 			continue
 		}
 		if !strings.HasPrefix(test, candidate.Content) {
+			//fmt.Printf("TEST: %s CANDIDATE: %+v FAILED\n", test, candidate)
 			continue
 		}
-		otherResults := CanBeComposedFromMemoized(test[len(candidate.Content):], validPermutations)
-		if otherResults != nil {
-			for _, otherResult := range otherResults {
-				potentialMatches = append(potentialMatches, append([]Sequence{candidate}, otherResult...))
-			}
+		otherResults := CanBeComposedFromMemoized(strings.TrimPrefix(test, candidate.Content), validPermutations)
+		if otherResults > 0 {
+			//fmt.Printf("TEST: %s CANDIDATE: %+v APPENDING: %d\n", test, candidate, otherResults)
+			potentialPermutations = otherResults + potentialPermutations
+			//for _, otherResult := range otherResults {
+			//
+			//	potentialMatches = append(potentialMatches, append([]Sequence{candidate}, otherResult...))
+			//}
 		}
 	}
 
-	return potentialMatches
+	return potentialPermutations
 }
 
-func CanBeComposedFromMemoized(test string, validPermutations []Sequence) [][]Sequence {
+func CanBeComposedFromMemoized(test string, validPermutations []Sequence) int {
 	sortedSequences := SortSequences(validPermutations)
 	key := fmt.Sprintf("%s|%v", test, sortedSequences)
 	result, _, cached := cache.Memoize(key, func() (interface{}, error) {
 		return CanBeComposedFrom(test, sortedSequences), nil
 	})
-	fmt.Printf("CACHE %s %t\n", key, cached)
-	return result.([][]Sequence)
+	fmt.Printf("CACHE %t %s\n", cached, key)
+	return result.(int)
 }
 
 func GetUniqueValues(input string) string {

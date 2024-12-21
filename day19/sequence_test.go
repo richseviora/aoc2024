@@ -3,8 +3,29 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 )
+
+func TestNewSequence(t *testing.T) {
+	testCases := []struct {
+		fileName string
+		expected int
+	}{
+		{
+			"input.txt",
+			6,
+		},
+	}
+	for testName, tc := range testCases {
+		t.Run(strconv.Itoa(testName), func(t *testing.T) {
+			result := ProcessChallenge(tc.fileName)
+			if result != tc.expected {
+				t.Errorf("expected %v, got %v", tc.expected, result)
+			}
+		})
+	}
+}
 
 func TestCanBeComposedFrom(t *testing.T) {
 	testCases := []struct {
