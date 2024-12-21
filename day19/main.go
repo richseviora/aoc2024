@@ -9,8 +9,9 @@ import (
 func ProcessChallenge(fname string) int {
 	input := ReadInput(fname)
 	puzzle := NewPuzzle(input)
+	result := puzzle.GetPossiblePatterns()
 	fmt.Printf("Result: %+v\n", puzzle)
-	return 0
+	return result
 }
 
 func ReadInput(fname string) string {
@@ -43,5 +44,5 @@ func HandleFile(fname string, expected int) {
 }
 
 func main() {
-	HandleFile("test1.txt", 6)
+	HandleFile("input.txt", 0)
 }

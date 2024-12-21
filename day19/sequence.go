@@ -32,36 +32,6 @@ func (s *Sequence) EqualTo(sequences []Sequence) bool {
 	return consolidated == s.Content
 }
 
-type Request struct {
-	Pattern string
-}
-
-type Puzzle struct {
-	Sequences []Sequence
-	Requests  []Request
-	Memoizer  *memoize.Memoizer
-}
-
-func NewPuzzle(input string) Puzzle {
-	lines := strings.Split(input, "\n")
-	sequences := make([]Sequence, 0)
-	requests := make([]Request, 0)
-	for i, line := range lines {
-		if i == 0 {
-			sequenceStrings := strings.Split(line, ", ")
-			for _, sequenceString := range sequenceStrings {
-				sequences = append(sequences, NewSequence(sequenceString))
-			}
-		} else if i > 1 {
-			requests = append(requests, Request{Pattern: line})
-		}
-	}
-	return Puzzle{
-		Sequences: sequences,
-		Requests:  requests,
-	}
-}
-
 func SortSequences(input []Sequence) []Sequence {
 	copySlice := make([]Sequence, len(input))
 	copy(copySlice, input)
@@ -145,14 +115,4 @@ func GetUniqueValues(input string) string {
 		stringResult += string(char)
 	}
 	return stringResult
-}
-
-func SimplifySequences(input []Sequence) []Sequence {
-	simplifiedSequences := make([]Sequence, 0)
-	for _, sequence := range input {
-		if !sequence.EqualTo(simplifiedSequences) {
-			simplifiedSequences = append(simplifiedSequences, sequence)
-		}
-	}
-	return simplifiedSequences
 }
