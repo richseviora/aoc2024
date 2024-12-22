@@ -5,12 +5,14 @@ import (
 	"os"
 )
 
-func ProcessChallenge(fname string) int {
+func ProcessChallenge(fname string, threshold int) int {
 	input := ReadInput(fname)
 	g := NewGridFromInput(input)
-	_, scores := g.GetDistancesFromCellToCell(g.startCell, g.endCell)
-	path := g.GetShortestPath(scores)
-	return len(path)
+	_, scoreFromStart := g.GetDistancesFromCellToCell(g.startCell, g.endCell)
+	_, scoreFromEnd := g.GetDistancesFromCellToCell(g.endCell, g.startCell)
+	cheats := g.CalculateSkips(scoreFromStart, scoreFromEnd, threshold)
+	g.PrintCellWithScoreAndSkips(scoreFromStart, cheats)
+	return len(cheats)
 }
 
 func ReadInput(fname string) string {
@@ -30,11 +32,11 @@ func ReadInput(fname string) string {
 
 }
 
-func HandleFile(fname string, expected int) {
+func HandleFile(fname string, expected int, threshold int) {
 
 	for _, pt2 := range []bool{true} {
 		color.Yellow("Filename: %s, Part 2: %t", fname, pt2)
-		result := ProcessChallenge(fname)
+		result := ProcessChallenge(fname, threshold)
 		if result == expected {
 			color.Green("PASSED - Expected: %d, Actual: %d", expected, result)
 		} else {
@@ -44,5 +46,5 @@ func HandleFile(fname string, expected int) {
 }
 
 func main() {
-	HandleFile("input.txt", 1024)
+	HandleFile("input.txt", 1024, 102)
 }

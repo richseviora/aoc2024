@@ -6,6 +6,7 @@ import (
 	heap2 "github.com/richseviora/aoc2024/day18/heap"
 	"os"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -171,12 +172,26 @@ func (g *Grid) GetDistancesFromCellToCell(startCell, endCell Coordinate) (int, m
 		}
 	}
 	//if enableDetail {
-	g.PrintCellWithScore(cellScores)
+	//g.PrintCellWithScore(cellScores)
 	//}
 
 	result := cellScores[endCell]
 	//fmt.Printf("RESULT: %d\n", result)
 	return result, cellScores
+}
+
+func (g *Grid) PrintCellWithScoreAndSkips(scores map[Coordinate]int, hops []Hop) {
+	maxScore := 0
+	for _, score := range scores {
+		if score > maxScore {
+			maxScore = score
+		}
+	}
+	cells := make(map[Coordinate]string)
+	for coord, cell := range scores {
+		cells[coord] = g.FormatCell(cell, coord, maxScore, hops)
+	}
+	g.PrintGrid(cells)
 }
 
 func (g *Grid) PrintCellWithScore(scores map[Coordinate]int) {
@@ -188,12 +203,24 @@ func (g *Grid) PrintCellWithScore(scores map[Coordinate]int) {
 	}
 	cells := make(map[Coordinate]string)
 	for coord, cell := range scores {
-		cells[coord] = g.FormatCell(cell, coord, maxScore)
+		cells[coord] = g.FormatCell(cell, coord, maxScore, nil)
 	}
 	g.PrintGrid(cells)
 }
 
-func (g *Grid) FormatCell(s int, c Coordinate, maxScore int) string {
+func (g *Grid) FormatCell(s int, c Coordinate, maxScore int, hops []Hop) string {
+	isStart := slices.IndexFunc(hops, func(hop Hop) bool {
+		return hop.from == c
+	}) >= 0
+	isEnd := slices.IndexFunc(hops, func(hop Hop) bool {
+		return hop.to == c
+	}) >= 0
+	if isStart {
+		return color.RGB(0, 128, 255).Sprint("U")
+	}
+	if isEnd {
+		return color.RGB(0, 128, 255).Sprint("D")
+	}
 	if c == g.endCell {
 		return color.RGB(255, 0, 0).Add(color.BlinkSlow).Sprint("E")
 	}
