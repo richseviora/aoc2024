@@ -18,6 +18,9 @@ func NewHeapQueue[T comparable]() *HeapQueue[T] {
 }
 
 func (h *HeapQueue[T]) Swap(i, j int) {
+	if i == j {
+		return
+	}
 	firstElement := (*h.elements)[i]
 	secondElement := (*h.elements)[j]
 	h.positions[firstElement], h.positions[secondElement] = h.positions[secondElement], h.positions[firstElement]
@@ -29,12 +32,12 @@ func (h *HeapQueue[T]) Len() int {
 }
 
 func (h *HeapQueue[T]) Push(x interface{}) {
-	cast, ok := x.(T)
-	if !ok {
-		panic("cannot cast")
-	}
-	h.positions[cast] = len(*h.elements)
-	*h.elements = append(*h.elements, cast)
+	h.positions[x.(T)] = len(*h.elements)
+	*h.elements = append(*h.elements, x.(T))
+}
+
+func (h *HeapQueue[T]) PopSafe() T {
+	return heap.Pop(h).(T)
 }
 
 func (h *HeapQueue[T]) Pop() any {
