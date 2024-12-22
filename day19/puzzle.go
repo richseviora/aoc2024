@@ -34,13 +34,16 @@ func NewPuzzle(input string) Puzzle {
 
 func (p *Puzzle) GetPossiblePatterns() int {
 	solutions := make(map[Request]int)
+	totalOptions := 0
 	for _, request := range p.Requests {
 		fmt.Printf("REQUEST EVAL BEGIN: %s\n", request.Pattern)
 		solution := CanBeComposedFromMemoized(request.Pattern, p.Sequences)
 		if solution > 0 {
 			solutions[request] = solution
+			totalOptions += solution
 		}
 		fmt.Printf("REQUEST EVAL END: %s %d\n", request.Pattern, solution)
 	}
+	fmt.Printf("TOTAL OPTIONS: %d\n", totalOptions)
 	return len(solutions)
 }
