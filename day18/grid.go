@@ -1,6 +1,7 @@
 package main
 
 import (
+	heap2 "day18/heap"
 	"errors"
 	"fmt"
 	"os"
@@ -227,7 +228,7 @@ func (g *Grid) GetPathDistanceToEnd() int {
 	var paths [][]*Cell
 	startCell := g.FindStartCell()
 	endCell := g.cells[Coordinate{x: g.width - 1, y: g.height - 1}]
-	heap := NewHeapQueue[*Cell]()
+	heap := heap2.NewHeapQueue[*Cell]()
 	heap.Push(startCell)
 	cellScores := map[Coordinate]int{
 		startCell.Coordinate: 0,
