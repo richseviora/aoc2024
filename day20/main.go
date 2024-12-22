@@ -8,7 +8,7 @@ import (
 func ProcessChallenge(fname string) int {
 	input := ReadInput(fname)
 	g := NewGridFromInput(input)
-	_, scores := g.GetShortestDistance()
+	_, scores := g.GetDistancesFromCellToCell(g.startCell, g.endCell)
 	path := g.GetShortestPath(scores)
 	return len(path)
 }
@@ -44,5 +44,5 @@ func HandleFile(fname string, expected int) {
 }
 
 func main() {
-	HandleFile("test1.txt", 1024)
+	HandleFile("input.txt", 1024)
 }

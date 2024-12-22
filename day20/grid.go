@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	heap2 "github.com/richseviora/aoc2024/day18/heap"
 	"os"
 	"reflect"
@@ -121,14 +122,12 @@ func (g *Grid) GetShortestPath(scores map[Coordinate]int) []Coordinate {
 			}
 		}
 	}
-	fmt.Printf("PATH: %+v\n", path)
+	//fmt.Printf("PATH: %+v\n", path)
 
 	return path
 }
 
-func (g *Grid) GetShortestDistance() (int, map[Coordinate]int) {
-	startCell := g.startCell
-	endCell := g.endCell
+func (g *Grid) GetDistancesFromCellToCell(startCell, endCell Coordinate) (int, map[Coordinate]int) {
 	heap := heap2.NewHeapQueue[Coordinate]()
 	heap.Push(startCell)
 	cellScores := map[Coordinate]int{
@@ -176,17 +175,45 @@ func (g *Grid) GetShortestDistance() (int, map[Coordinate]int) {
 	//}
 
 	result := cellScores[endCell]
-	fmt.Printf("RESULT: %d\n", result)
+	//fmt.Printf("RESULT: %d\n", result)
 	return result, cellScores
 }
 
 func (g *Grid) PrintCellWithScore(scores map[Coordinate]int) {
+	maxScore := 0
+	for _, score := range scores {
+		if score > maxScore {
+			maxScore = score
+		}
+	}
 	cells := make(map[Coordinate]string)
 	for coord, cell := range scores {
-		itoa := strconv.Itoa(cell)
-		cells[coord] = itoa[len(itoa)-1 : len(itoa)]
+		cells[coord] = g.FormatCell(cell, coord, maxScore)
 	}
 	g.PrintGrid(cells)
+}
+
+func (g *Grid) FormatCell(s int, c Coordinate, maxScore int) string {
+	if c == g.endCell {
+		return color.RGB(255, 0, 0).Add(color.BlinkSlow).Sprint("E")
+	}
+	if c == g.startCell {
+		return color.RGB(255, 0, 0).Add(color.BlinkSlow).Sprint("S")
+	}
+	return ColorizeScore(s, maxScore)
+}
+
+func ColorizeScore(score int, maxScore int) string {
+	itoa := strconv.Itoa(score)
+	txt := itoa[len(itoa)-1 : len(itoa)]
+
+	// Calculate the intensity of red and green based on the score relative to maxScore
+	// maxScore becomes fully red, score 0 is fully green
+	red := (float32(score) * 255) / float32(maxScore)
+	green := 255 - red
+
+	// Create the color with dynamic red and green, no blue component
+	return color.RGB(int(red), int(green), 0).Sprint(txt)
 }
 
 func (g *Grid) PrintGrid(path map[Coordinate]string) {
