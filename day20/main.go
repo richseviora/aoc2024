@@ -19,7 +19,7 @@ func ProcessChallenge(fname string, threshold int, pt2 bool) int {
 			}
 		}
 		if count != 0 {
-			color.Cyan("Cheat Count: %d, Savings: %d", count, i)
+			color.Cyan("There are %d cheats that save %d picoseconds.", count, i)
 		}
 
 	}
@@ -58,5 +58,5 @@ func HandleFile(fname string, expected int, threshold int, pt2 bool) {
 }
 
 func main() {
-	HandleFile("test1.txt", 285, 50, true)
+	HandleFile("input.txt", 285, 100, true)
 }

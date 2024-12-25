@@ -16,7 +16,7 @@ func (h *Hop) Distance() int {
 
 func (g *Grid) CalculateLongSkips(grid1, grid2 map[Coordinate]int, threshold int) []Hop {
 	// get the maximum score here so we know if we're beating it
-	hopLength := 20
+	hopLength := 21
 	maxValue := math.MinInt
 	for _, value := range grid1 {
 		if value > maxValue {
