@@ -5,12 +5,24 @@ import (
 	"os"
 )
 
-func ProcessChallenge(fname string, threshold int) int {
+func ProcessChallenge(fname string, threshold int, pt2 bool) int {
 	input := ReadInput(fname)
 	g := NewGridFromInput(input)
 	_, scoreFromStart := g.GetDistancesFromCellToCell(g.startCell, g.endCell)
 	_, scoreFromEnd := g.GetDistancesFromCellToCell(g.endCell, g.startCell)
-	cheats := g.CalculateSkips(scoreFromStart, scoreFromEnd, threshold)
+	cheats := g.CalculateSkips(scoreFromStart, scoreFromEnd, threshold, pt2)
+	for i := 50; i < 100; i++ {
+		count := 0
+		for _, cheat := range cheats {
+			if cheat.savings == i {
+				count++
+			}
+		}
+		if count != 0 {
+			color.Cyan("Cheat Count: %d, Savings: %d", count, i)
+		}
+
+	}
 	g.PrintCellWithScoreAndSkips(scoreFromStart, cheats)
 	return len(cheats)
 }
@@ -32,11 +44,11 @@ func ReadInput(fname string) string {
 
 }
 
-func HandleFile(fname string, expected int, threshold int) {
+func HandleFile(fname string, expected int, threshold int, pt2 bool) {
 
-	for _, pt2 := range []bool{true} {
+	for _, pt2 := range []bool{pt2} {
 		color.Yellow("Filename: %s, Part 2: %t", fname, pt2)
-		result := ProcessChallenge(fname, threshold)
+		result := ProcessChallenge(fname, threshold, pt2)
 		if result == expected {
 			color.Green("PASSED - Expected: %d, Actual: %d", expected, result)
 		} else {
@@ -46,5 +58,5 @@ func HandleFile(fname string, expected int, threshold int) {
 }
 
 func main() {
-	HandleFile("input.txt", 1024, 102)
+	HandleFile("test1.txt", 285, 50, true)
 }
